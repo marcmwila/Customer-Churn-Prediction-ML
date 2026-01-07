@@ -6,7 +6,13 @@ st.set_page_config(page_title="Customer Churn Predictor")
 
 st.title("📊 Customer Churn Prediction")
 
-model = pickle.load(open("models/churn_model.pkl", "rb"))
+from pathlib import Path
+import pickle
+
+MODEL_PATH = Path(__file__).parent / "models" / "random_forest_model.pkl"
+model = pickle.load(open(MODEL_PATH, "rb"))
+
+
 
 tenure = st.number_input("Tenure", min_value=0)
 monthly = st.number_input("Monthly Charges", min_value=0.0)
