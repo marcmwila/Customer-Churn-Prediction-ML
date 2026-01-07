@@ -1,19 +1,40 @@
 import streamlit as st
 import pandas as pd
-import joblib
+import pickle
 
-model = joblib.load("models/random_forest_model.pkl")
+st.set_page_config(page_title="Customer Churn Predictor")
 
+st.title("📊 Customer Churn Prediction")
 
-st.title("Customer Churn Prediction")
+model = pickle.load(open("models/churn_model.pkl", "rb"))
 
-# Input fields
-tenure = st.number_input("Tenure (months)", min_value=0, max_value=72)
-monthly_charges = st.number_input("Monthly Charges", min_value=0.0, max_value=500.0)
-total_charges = st.number_input("Total Charges", min_value=0.0, max_value=5000.0)
+tenure = st.number_input("Tenure", min_value=0)
+monthly = st.number_input("Monthly Charges", min_value=0.0)
+total = st.number_input("Total Charges", min_value=0.0)
 
-if st.button("Predict"):
-    data = pd.DataFrame([[tenure, monthly_charges, total_charges]],
-                        columns=['tenure','MonthlyCharges','TotalCharges'])
-    prediction = model.predict(data)
-    st.write("Customer will churn" if prediction[0] else "Customer will stay")
+contract = st.selectbox("Contract Type", ["Month-to-month", "One year", "Two year"])
+payment = st.selectbox("Payment Method", [
+    "Electronic check",
+    "Mailed check",
+    "Bank transfer (automatic)",
+    "Credit card (automatic)"
+])
+internet = st.selectbox("Internet Service", ["DSL", "Fiber optic", "No"])
+
+if st.button("Predict Churn"):
+    input_df = pd.DataFrame([{
+        "tenure": tenure,
+        "MonthlyCharges": monthly,
+        "TotalCharges": total,
+        "Contract": contract,
+        "PaymentMethod": payment,
+        "InternetService": internet
+    }])
+
+    prediction = model.predict(input_df)[0]
+    prob = model.predict_proba(input_df)[0][1]
+
+    if prediction == 1:
+        st.error(f"⚠️ Customer likely to churn (probability: {prob:.2f})")
+    else:
+        st.success(f"✅ Customer likely to stay (probability: {1-prob:.2f})")
